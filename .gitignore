@@ -64,8 +64,7 @@ backend/uploads/*
 backend/data/raw/images/
 backend/data/raw/*.csv
 
-# Generated vector store (regenerable by running embed_catalog.py)
-backend/rag/chroma_store/
+
 
 # 7. Editor & IDE Settings
 .vscode/
