@@ -19,8 +19,48 @@ def seed_database():
         
         csv_path = os.path.join("data", "raw", "styles.csv")
         if not os.path.exists(csv_path):
-            print(f"Error: styles.csv not found at {csv_path}")
-            return
+            print(f"styles.csv not found at {csv_path}. Attempting to seed from persistent ChromaDB store...")
+            import chromadb
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            chroma_path = os.path.abspath(os.path.join(current_dir, "..", "rag", "chroma_store"))
+            
+            if not os.path.exists(chroma_path):
+                print(f"Error: Chroma store path not found at {chroma_path}")
+                return
+                
+            client = chromadb.PersistentClient(path=chroma_path)
+            try:
+                collection = client.get_collection(name="products")
+                data = collection.get()
+                metadatas = data.get("metadatas", [])
+                if not metadatas:
+                    print("Error: No metadatas found in Chroma collection 'products'")
+                    return
+                    
+                seeded_count = 0
+                for meta in metadatas:
+                    product_id = int(meta["id"])
+                    
+                    product = Product(
+                        id=product_id,
+                        name=meta.get("name"),
+                        category=meta.get("category"),
+                        subcategory=meta.get("subcategory"),
+                        price=int(meta.get("price")),
+                        style_tags=meta.get("style_tags"),
+                        description=meta.get("description"),
+                        image_url=meta.get("image_url"),
+                        embedding_id=str(product_id)
+                    )
+                    db.add(product)
+                    seeded_count += 1
+                    
+                db.commit()
+                print(f"Successfully seeded {seeded_count} products from ChromaDB into the database.")
+                return
+            except Exception as ex:
+                print(f"Failed to seed from ChromaDB: {ex}")
+                return
             
         print(f"Reading product metadata from {csv_path}...")
         df = pd.read_csv(csv_path, on_bad_lines='skip')
