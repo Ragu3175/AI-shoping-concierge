@@ -7,13 +7,14 @@ from sqlalchemy.orm import sessionmaker
 # Load environment variables from .env
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set.")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
 # Create SQLAlchemy engine
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
 
 # Create sessionmaker
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

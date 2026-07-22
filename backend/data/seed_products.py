@@ -13,7 +13,7 @@ def seed_database():
     db = SessionLocal()
     try:
         # Clear existing products to ensure clean, idempotent seed
-        print("Clearing existing products in MySQL...")
+        print("Clearing existing products in the database...")
         db.query(Product).delete()
         db.commit()
         
@@ -119,7 +119,7 @@ def seed_database():
             seeded_count += 1
             
         db.commit()
-        print(f"Seeded {seeded_count} products with images into MySQL")
+        print(f"Seeded {seeded_count} products with images into the database")
         
     except Exception as e:
         db.rollback()

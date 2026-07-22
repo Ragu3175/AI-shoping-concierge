@@ -18,7 +18,7 @@ def embed_catalog():
     
     db = SessionLocal()
     try:
-        print("Fetching products from MySQL database...")
+        print("Fetching products from the database...")
         products = db.query(Product).all()
         if not products:
             print("No products found in the database. Please run the seeding script first.")
@@ -76,7 +76,7 @@ def embed_catalog():
                 documents=texts
             )
             
-            # Update MySQL records with embedding_id
+            # Update database records with embedding_id
             for p in batch_products:
                 p.embedding_id = str(p.id)
                 db.add(p)
