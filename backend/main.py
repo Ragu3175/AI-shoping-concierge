@@ -11,6 +11,26 @@ from routes.history import router as history_router
 # Initialize database tables on startup
 Base.metadata.create_all(bind=engine)
 
+# Auto-seed database if empty (required for Render deployment since app.db is ignored in git)
+from sqlalchemy import func
+from db.database import SessionLocal
+from db.models import Product
+from data.seed_products import seed_database
+
+db = SessionLocal()
+try:
+    product_count = db.query(func.count(Product.id)).scalar()
+    if product_count == 0:
+        print("[Startup] Database is empty. Running auto-seed...")
+        seed_database()
+        print("[Startup] Auto-seed completed successfully.")
+    else:
+        print(f"[Startup] Database already has {product_count} products. Skipping seeding.")
+except Exception as e:
+    print(f"[Startup] Auto-seed check failed: {e}")
+finally:
+    db.close()
+
 app = FastAPI(
     title="AI Shopping Concierge API",
     description="Backend API service for AI Shopping Concierge",

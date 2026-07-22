@@ -6,7 +6,7 @@ sys.modules['opentelemetry.exporter.otlp.proto.grpc.trace_exporter'] = MagicMock
 
 import os
 import chromadb
-from sentence_transformers import SentenceTransformer
+
 
 class VectorStore:
     """
@@ -24,8 +24,8 @@ class VectorStore:
             metadata={"hnsw:space": "cosine"}
         )
         
-        # Load embedding model
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        # Load embedding model lazily during query execution to speed up app startup
+        self.model = None
 
     def query(self, text: str, top_k: int = 10):
         """
@@ -41,6 +41,10 @@ class VectorStore:
         """
         if not text or not text.strip():
             return []
+            
+        if self.model is None:
+            from sentence_transformers import SentenceTransformer
+            self.model = SentenceTransformer('all-MiniLM-L6-v2')
             
         # Generate embedding for the query
         query_embedding = self.model.encode(text).tolist()
