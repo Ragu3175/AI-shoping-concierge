@@ -5,6 +5,8 @@ from fastapi.staticfiles import StaticFiles
 from db.database import engine, Base
 from auth.routes import router as auth_router
 from profiles.routes import router as profile_router
+from routes.query import router as query_router
+from routes.history import router as history_router
 
 # Initialize database tables on startup
 Base.metadata.create_all(bind=engine)
@@ -27,6 +29,8 @@ app.add_middleware(
 # Register routers
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(profile_router, prefix="/api/profile", tags=["Profile"])
+app.include_router(query_router, prefix="/api/query", tags=["AI Query"])
+app.include_router(history_router, prefix="/api/history", tags=["Search History"])
 
 # Mount uploads static folder to serve profile pictures
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

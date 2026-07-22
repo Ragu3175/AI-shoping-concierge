@@ -12,4 +12,8 @@ alembic
 pandas
 sentence-transformers
 chromadb
+groq
+google-generativeai
+crewai
+langgraph
 

@@ -19,7 +19,10 @@ class VectorStore:
         
         # Load ChromaDB client and collection
         self.client = chromadb.PersistentClient(path=chroma_path)
-        self.collection = self.client.get_or_create_collection(name="products")
+        self.collection = self.client.get_or_create_collection(
+            name="products",
+            metadata={"hnsw:space": "cosine"}
+        )
         
         # Load embedding model
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -34,7 +37,7 @@ class VectorStore:
             top_k (int): Number of matches to return.
             
         Returns:
-            list: List of product metadata dictionaries with their similarity scores.
+            list: List of product metadata dictionaries with similarity scores and distances.
         """
         if not text or not text.strip():
             return []
@@ -55,15 +58,28 @@ class VectorStore:
             distances = results["distances"][0]
             
             for doc_id, metadata, distance in zip(ids, metadatas, distances):
-                # Convert L2 distance (Chroma default) to a normalized similarity score
-                similarity_score = 1.0 / (1.0 + distance)
+                # Cosine distance in Chroma: distance = 1 - cosine_similarity
+                # Convert to Cosine Similarity score [0.0, 1.0]
+                similarity_score = max(0.0, 1.0 - float(distance))
                 
+                # Parse style_tags if stored as string/list
+                style_tags = metadata.get("style_tags", "")
+                if isinstance(style_tags, str):
+                    style_tags_list = [t.strip() for t in style_tags.split(",") if t.strip()]
+                else:
+                    style_tags_list = style_tags if isinstance(style_tags, list) else []
+
                 formatted_results.append({
                     "id": metadata.get("id"),
                     "name": metadata.get("name"),
                     "price": metadata.get("price"),
                     "image_url": metadata.get("image_url"),
-                    "score": similarity_score
+                    "category": metadata.get("category"),
+                    "subcategory": metadata.get("subcategory", ""),
+                    "style_tags": style_tags_list,
+                    "description": metadata.get("description"),
+                    "score": round(similarity_score, 4),
+                    "distance": round(float(distance), 4)
                 })
                 
         return formatted_results

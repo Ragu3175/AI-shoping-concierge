@@ -38,7 +38,10 @@ def embed_catalog():
         except Exception:
             pass
             
-        collection = client.get_or_create_collection(name=collection_name)
+        collection = client.get_or_create_collection(
+            name=collection_name,
+            metadata={"hnsw:space": "cosine"}
+        )
         
         print("Generating embeddings and indexing catalog...")
         batch_size = 50
@@ -46,14 +49,18 @@ def embed_catalog():
             batch_products = products[start_idx : start_idx + batch_size]
             
             ids = [str(p.id) for p in batch_products]
-            # Combined text: {name}. {category}. {style_tags}. {description}
-            texts = [f"{p.name}. {p.category}. {p.style_tags}. {p.description}" for p in batch_products]
+            # Combined text: {name}. {category}. {subcategory}. {style_tags}. {description}
+            texts = [f"{p.name}. {p.category}. {p.subcategory or ''}. {p.style_tags}. {p.description}" for p in batch_products]
             metadatas = [
                 {
                     "id": p.id,
                     "name": p.name,
                     "price": p.price,
-                    "image_url": p.image_url
+                    "image_url": p.image_url or "",
+                    "category": p.category or "",
+                    "subcategory": p.subcategory or "",
+                    "style_tags": p.style_tags or "",
+                    "description": p.description or ""
                 }
                 for p in batch_products
             ]

@@ -57,8 +57,9 @@ htmlcov/
 *.sqlite
 *.sqlite3
 *.db
-backend/uploads/*
-!backend/uploads/.gitkeep
+backend/uploads/profile_pictures/*
+!backend/uploads/profile_pictures/.gitkeep
+!backend/uploads/product_images/
 
 # Raw dataset (44k+ images, regenerable/re-downloadable, don't commit)
 backend/data/raw/images/
