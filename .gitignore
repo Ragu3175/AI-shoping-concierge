@@ -60,6 +60,7 @@ htmlcov/
 backend/uploads/profile_pictures/*
 !backend/uploads/profile_pictures/.gitkeep
 !backend/uploads/product_images/
+!backend/rag/chroma_store/chroma.sqlite3
 
 # Raw dataset (44k+ images, regenerable/re-downloadable, don't commit)
 backend/data/raw/images/
