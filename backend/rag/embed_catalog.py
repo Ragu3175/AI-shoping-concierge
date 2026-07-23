@@ -6,7 +6,7 @@ sys.modules['opentelemetry.exporter.otlp.proto.grpc.trace_exporter'] = MagicMock
 
 import os
 import chromadb
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 from db.database import SessionLocal
 from db.models import Product
 
@@ -24,8 +24,8 @@ def embed_catalog():
             print("No products found in the database. Please run the seeding script first.")
             return
             
-        print(f"Found {len(products)} products. Loading SentenceTransformer('all-MiniLM-L6-v2')...")
-        model = SentenceTransformer('all-MiniLM-L6-v2')
+        print(f"Found {len(products)} products. Loading fastembed TextEmbedding('all-MiniLM-L6-v2')...")
+        model = TextEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
         
         from chromadb.config import Settings
         print(f"Initializing ChromaDB persistent client at {chroma_path}...")
@@ -70,7 +70,7 @@ def embed_catalog():
             ]
             
             # Generate embeddings
-            embeddings = model.encode(texts).tolist()
+            embeddings = [emb.tolist() for emb in model.embed(texts)]
             
             # Store in ChromaDB
             collection.add(
