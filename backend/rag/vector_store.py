@@ -18,7 +18,11 @@ class VectorStore:
         chroma_path = os.path.join(current_dir, "chroma_store")
         
         # Load ChromaDB client and collection
-        self.client = chromadb.PersistentClient(path=chroma_path)
+        from chromadb.config import Settings
+        self.client = chromadb.PersistentClient(
+            path=chroma_path,
+            settings=Settings(anonymized_telemetry=False)
+        )
         self.collection = self.client.get_or_create_collection(
             name="products",
             metadata={"hnsw:space": "cosine"}

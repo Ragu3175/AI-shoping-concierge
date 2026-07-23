@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { getHistory, getHistoryDetail } from '../api/queryApi';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.29.124:8000';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.23:8000';
 
 export default function HistoryScreen({ navigation }) {
   const [historyData, setHistoryData] = useState([]);

@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
 import { getProfile, updateProfile, uploadProfilePicture } from '../api/profileApi';
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.29.124:8000';
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.23:8000';
 
 export default function StyleProfileScreen({ route, navigation }) {
   const { logout, user, setUser } = useContext(AuthContext);

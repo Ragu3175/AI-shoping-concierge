@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Animated, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.29.124:8000';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.23:8000';
 
 export default function StyleBoardScreen({ route, navigation }) {
   const {
