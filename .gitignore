@@ -85,3 +85,7 @@ backend/data/raw/*.csv
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# 9. Project Context & Plans
+plan.md
+
