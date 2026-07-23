@@ -27,8 +27,12 @@ def embed_catalog():
         print(f"Found {len(products)} products. Loading SentenceTransformer('all-MiniLM-L6-v2')...")
         model = SentenceTransformer('all-MiniLM-L6-v2')
         
+        from chromadb.config import Settings
         print(f"Initializing ChromaDB persistent client at {chroma_path}...")
-        client = chromadb.PersistentClient(path=chroma_path)
+        client = chromadb.PersistentClient(
+            path=chroma_path,
+            settings=Settings(anonymized_telemetry=False)
+        )
         
         # Reset the collection if it exists to ensure a clean state
         collection_name = "products"

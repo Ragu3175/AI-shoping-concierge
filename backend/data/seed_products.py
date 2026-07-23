@@ -21,6 +21,7 @@ def seed_database():
         if not os.path.exists(csv_path):
             print(f"styles.csv not found at {csv_path}. Attempting to seed from persistent ChromaDB store...")
             import chromadb
+            from chromadb.config import Settings
             current_dir = os.path.dirname(os.path.abspath(__file__))
             chroma_path = os.path.abspath(os.path.join(current_dir, "..", "rag", "chroma_store"))
             
@@ -28,7 +29,10 @@ def seed_database():
                 print(f"Error: Chroma store path not found at {chroma_path}")
                 return
                 
-            client = chromadb.PersistentClient(path=chroma_path)
+            client = chromadb.PersistentClient(
+                path=chroma_path,
+                settings=Settings(anonymized_telemetry=False)
+            )
             try:
                 collection = client.get_collection(name="products")
                 data = collection.get()
