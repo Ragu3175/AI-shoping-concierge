@@ -7,7 +7,14 @@ from sqlalchemy.orm import sessionmaker
 # Load environment variables from .env
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    # SQLAlchemy 1.4+ deprecated the postgres:// dialect name, but platforms like Render/Supabase
+    # still provide connection strings starting with postgres://. Rewrite to postgresql://.
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+else:
+    DATABASE_URL = "sqlite:///./app.db"
 
 # Create SQLAlchemy engine
 connect_args = {}
