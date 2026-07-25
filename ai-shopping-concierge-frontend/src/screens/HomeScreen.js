@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import SuggestionChip from '../components/SuggestionChip';
 
 export default function HomeScreen({ navigation }) {
   const [query, setQuery] = useState('');
@@ -12,52 +13,88 @@ export default function HomeScreen({ navigation }) {
     "Casual weekend"
   ];
 
+  // Hide Screen Header dynamically to let the custom masthead shine
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
+
+  // Focus and Border Animations
+  const [queryFocused, setQueryFocused] = useState(false);
+  const borderAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(borderAnim, {
+      toValue: queryFocused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [queryFocused]);
+
+  const borderColor = borderAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['rgba(107, 101, 92, 0.2)', '#B08D57'],
+  });
+
   const handleSubmit = () => {
     if (query.trim() === '') return;
     navigation.navigate('Loading', { query: query.trim() });
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FAF9F6] px-6 justify-center" edges={['bottom', 'left', 'right']}>
+    <SafeAreaView className="flex-1 bg-bone px-6 justify-center" edges={['top', 'bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }} showsVerticalScrollIndicator={false}>
-        <View className="py-6">
-          <Text className="text-3xl font-bold text-[#2A2A2A] text-center mb-8 tracking-tight leading-10">
-            What are you{"\n"}looking for?
+        <View className="py-12">
+          {/* Masthead Headline */}
+          <Text 
+            style={{ fontFamily: 'PlayfairDisplay-SemiBold' }} 
+            className="text-4xl font-bold text-ink text-left mb-12 tracking-tight leading-[48px]"
+          >
+            What are you{"\n"}shopping for?
           </Text>
 
-          {/* Multiline TextInput */}
-          <TextInput
-            className="w-full bg-white border border-stone-200 rounded-2xl p-5 text-[#2A2A2A] text-base mb-6 align-top"
-            style={{ minHeight: 120, textAlignVertical: 'top' }}
-            placeholder="Office wear, budget ₹5k, minimal style..."
-            placeholderTextColor="#8C8C8C"
-            multiline={true}
-            numberOfLines={4}
-            value={query}
-            onChangeText={setQuery}
-          />
-
-          {/* Suggestion Chips */}
-          <View className="flex-row flex-wrap justify-center gap-2 mb-8">
-            {suggestionChips.map((chip, index) => (
-              <TouchableOpacity
-                key={index}
-                className="bg-stone-100 border border-stone-200 px-4 py-2.5 rounded-full"
-                onPress={() => setQuery(chip)}
-                activeOpacity={0.7}
-              >
-                <Text className="text-stone-700 text-sm font-medium">{chip}</Text>
-              </TouchableOpacity>
-            ))}
+          {/* Understated Multiline TextInput with Animated bottom-border */}
+          <View className="relative mb-10 pb-1">
+            <TextInput
+              onFocus={() => setQueryFocused(true)}
+              onBlur={() => setQueryFocused(false)}
+              className="w-full text-ink text-lg py-3 font-normal align-top leading-6"
+              style={{ minHeight: 80, textAlignVertical: 'top' }}
+              placeholder="Office wear, budget ₹5k, minimal style..."
+              placeholderTextColor="#6B655C"
+              multiline={true}
+              numberOfLines={3}
+              value={query}
+              onChangeText={setQuery}
+            />
+            <Animated.View style={{ height: 1.5, backgroundColor: borderColor, position: 'absolute', bottom: 0, left: 0, right: 0 }} />
           </View>
+
+          {/* Suggestion Chips with horizontal scroll */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 4, paddingVertical: 12, gap: 8 }}
+            className="mb-10"
+          >
+            {suggestionChips.map((chip, index) => (
+              <SuggestionChip
+                key={index}
+                label={chip}
+                onPress={() => setQuery(chip)}
+                isActive={query === chip}
+              />
+            ))}
+          </ScrollView>
 
           {/* Submit Button */}
           <TouchableOpacity
-            className="w-full bg-[#4F46E5] py-4 rounded-2xl items-center shadow-none border border-transparent"
+            className="w-full bg-brass py-4 rounded-sm items-center shadow-none"
             onPress={handleSubmit}
             activeOpacity={0.85}
           >
-            <Text className="text-white text-base font-semibold tracking-wide">Find my picks</Text>
+            <Text className="text-bone text-base font-semibold tracking-widest uppercase">Find my picks</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

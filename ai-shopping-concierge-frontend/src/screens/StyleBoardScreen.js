@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Animated, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import SwingTag from '../components/SwingTag';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.23:8000';
 
@@ -14,6 +15,13 @@ export default function StyleBoardScreen({ route, navigation }) {
 
   // Animation ref for fading status line
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Header dynamic configuration
+  useEffect(() => {
+    navigation.setOptions({
+      title: 'Style Board',
+    });
+  }, [navigation]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -39,21 +47,21 @@ export default function StyleBoardScreen({ route, navigation }) {
   // Render Error View if API call failed
   if (error || (!top_pick && (!alternatives || alternatives.length === 0))) {
     return (
-      <SafeAreaView className="flex-1 bg-[#FAF9F6] justify-center px-6" edges={['top', 'bottom', 'left', 'right']}>
-        <View className="bg-white border border-stone-200 rounded-3xl p-8 items-center shadow-sm">
+      <SafeAreaView className="flex-1 bg-bone justify-center px-6" edges={['top', 'bottom', 'left', 'right']}>
+        <View className="bg-white border border-[#EADFC9] rounded-xl p-8 items-center shadow-xs">
           <Text className="text-4xl mb-4">⚠️</Text>
-          <Text className="text-xl font-bold text-[#2A2A2A] text-center mb-2">
+          <Text className="text-xl font-bold text-ink text-center mb-2">
             Oops!
           </Text>
-          <Text className="text-stone-500 text-sm text-center mb-6 leading-5">
+          <Text className="text-charcoal60 text-sm text-center mb-6 leading-5">
             {error || "We couldn't find matches for your search. Try tweaking your query!"}
           </Text>
           <TouchableOpacity
-            className="w-full bg-[#4F46E5] py-4 rounded-2xl items-center"
+            className="w-full bg-brass py-4 rounded-sm items-center"
             onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
             activeOpacity={0.85}
           >
-            <Text className="text-white font-semibold text-base">Try New Search</Text>
+            <Text className="text-bone font-semibold text-sm tracking-widest uppercase">Try New Search</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -64,61 +72,79 @@ export default function StyleBoardScreen({ route, navigation }) {
   const topPickImageUrl = getImageUrl(top_pick?.image_url);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FAF9F6]" edges={['bottom', 'left', 'right']}>
+    <SafeAreaView className="flex-1 bg-bone" edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         
         {/* Top Header/Pill Section */}
         <View className="px-6 pt-4">
-          <View className="bg-stone-100 border border-stone-200 self-start px-4 py-2 rounded-full mb-4">
-            <Text className="text-stone-600 text-sm font-medium">🔍 {query}</Text>
+          <View className="bg-white border border-[#EADFC9] self-start px-4 py-2 rounded-sm mb-4">
+            <Text className="text-charcoal60 text-xs font-semibold">🔍 {query}</Text>
           </View>
 
           {/* Fading Status Line */}
           <Animated.View style={{ opacity: fadeAnim }} className="flex-row items-center mb-6">
-            <Text className="text-emerald-600 text-base font-bold mr-2">✓</Text>
-            <Text className="text-stone-500 text-sm font-medium">
+            <Text className="text-sage text-base font-bold mr-2">✓</Text>
+            <Text className="text-charcoal60 text-xs font-medium">
               Stylist, budget and comparator agents reviewed your catalog
             </Text>
           </Animated.View>
 
           {/* Section: Top Pick */}
-          <Text className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-3">Top pick</Text>
+          <Text className="text-charcoal60 text-xs font-bold uppercase tracking-widest mb-3">Top pick</Text>
 
           {/* Hero Card */}
-          <View className="bg-white border-2 border-[#4F46E5] rounded-2xl p-5 mb-8 shadow-sm">
-            <View className="flex-row justify-between items-start mb-4">
+          <View className="bg-white border border-[#EADFC9] rounded-xl overflow-hidden mb-8 shadow-xs">
+            {/* Full-bleed image with Price Badge absolute-positioned */}
+            <View className="relative w-full h-64 bg-bone justify-center items-center">
               {topPickImageUrl ? (
                 <Image
                   source={{ uri: topPickImageUrl }}
-                  className="w-24 h-24 rounded-xl bg-stone-100"
+                  style={{ width: 192, height: 256 }}
                   resizeMode="cover"
+                  fadeDuration={0}
+                  resizeMethod="resize"
                 />
               ) : (
-                <View className="w-24 h-24 bg-stone-100 rounded-xl justify-center items-center">
-                  <Text className="text-stone-400 text-xs font-semibold">No Image</Text>
+                <View className="w-full h-full justify-center items-center">
+                  <Text className="text-charcoal60 text-sm font-semibold">No Image Available</Text>
                 </View>
               )}
-              <View className="bg-[#4F46E5] px-3.5 py-1.5 rounded-full">
-                <Text className="text-white text-[10px] font-bold uppercase tracking-wider">
-                  {top_pick?.badge || 'Top pick'}
-                </Text>
+              {/* Absolute price swing-tag badge */}
+              <View className="absolute top-4 right-4 shadow-sm">
+                <SwingTag text={formatPrice(top_pick?.price)} color="bg-brass" textColor="text-bone" notchBg="bg-white" rotation="-8deg" />
               </View>
             </View>
 
-            <Text className="text-xl font-bold text-[#2A2A2A] mb-1">{top_pick?.name}</Text>
-            <Text className="text-lg font-semibold text-[#4F46E5] mb-3">{formatPrice(top_pick?.price)}</Text>
-            
-            {/* Reasoning text */}
-            <View className="border-t border-stone-100 pt-3">
-              <Text className="text-stone-600 text-sm leading-5">
-                {topPickReasoning}
+            <View className="p-5">
+              <Text style={{ fontFamily: 'PlayfairDisplay-SemiBold' }} className="text-2xl font-bold text-ink mb-3 leading-8">
+                {top_pick?.name}
               </Text>
+
+              {/* Reasoning tags */}
+              <View className="flex-row flex-wrap gap-2 mb-4">
+                {top_pick?.stylist_reasoning && (
+                  <SwingTag text="style match" color="bg-brass" textColor="text-bone" notchBg="bg-white" rotation="-8deg" small={true} />
+                )}
+                {top_pick?.budget_reasoning && (
+                  <SwingTag text="within budget" color="bg-sage" textColor="text-bone" notchBg="bg-white" rotation="-8deg" small={true} />
+                )}
+                {top_pick?.comparator_reasoning && (
+                  <SwingTag text="value pick" color="bg-clay" textColor="text-bone" notchBg="bg-white" rotation="-8deg" small={true} />
+                )}
+              </View>
+
+              {/* Detailed Reasoning text */}
+              <View className="border-t border-[#F6F1E7] pt-4">
+                <Text className="text-charcoal60 text-sm leading-6">
+                  {topPickReasoning}
+                </Text>
+              </View>
             </View>
           </View>
 
           {/* Section: Also Worth A Look */}
           {alternatives && alternatives.length > 0 && (
-            <Text className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-3">Also worth a look</Text>
+            <Text className="text-charcoal60 text-xs font-bold uppercase tracking-widest mb-3">Also worth a look</Text>
           )}
         </View>
 
@@ -131,43 +157,58 @@ export default function StyleBoardScreen({ route, navigation }) {
             className="mb-8"
           >
             {alternatives.map((card, index) => {
-              const badgeText = card.badge || 'Style match';
-              const isBestValue = badgeText === "Best value";
-              const badgeBg = isBestValue ? "bg-teal-50" : "bg-indigo-50";
-              const badgeTxt = isBestValue ? "text-teal-700" : "text-[#4F46E5]";
-              const badgeBorder = isBestValue ? "border-teal-200" : "border-indigo-100";
               const cardImageUrl = getImageUrl(card.image_url);
               const cardReasoning = card.comparator_reasoning || card.stylist_reasoning || card.budget_reasoning || 'Solid alternative match for your search.';
 
               return (
-                <View key={card.id || index} className="bg-white border border-stone-200 rounded-2xl p-4 mr-4 w-64 shadow-xs">
-                  <View className="flex-row justify-between items-start mb-3">
+                <View key={card.id || index} className="bg-white border border-[#EADFC9] rounded-xl overflow-hidden mr-4 w-64 shadow-xs">
+                  {/* Full-bleed image with Price Badge absolute-positioned */}
+                  <View className="relative w-full h-40 bg-bone justify-center items-center">
                     {cardImageUrl ? (
                       <Image
                         source={{ uri: cardImageUrl }}
-                        className="w-16 h-16 rounded-xl bg-stone-100"
+                        style={{ width: 120, height: 160 }}
                         resizeMode="cover"
+                        fadeDuration={0}
+                        resizeMethod="resize"
                       />
                     ) : (
-                      <View className="w-16 h-16 bg-stone-100 rounded-xl justify-center items-center">
-                        <Text className="text-stone-400 text-[10px] font-semibold">No Image</Text>
+                      <View className="w-full h-full justify-center items-center">
+                        <Text className="text-charcoal60 text-xs font-semibold">No Image</Text>
                       </View>
                     )}
-                    <View className={`${badgeBg} ${badgeBorder} border px-2.5 py-1 rounded-full`}>
-                      <Text className={`${badgeTxt} text-[10px] font-bold uppercase tracking-wider`}>
-                        {badgeText}
-                      </Text>
+                    {/* Absolute price swing-tag badge */}
+                    <View className="absolute top-3 right-3 shadow-xs">
+                      <SwingTag text={formatPrice(card.price)} color="bg-brass" textColor="text-bone" notchBg="bg-white" rotation="-8deg" small={true} />
                     </View>
                   </View>
 
-                  <Text className="text-base font-bold text-[#2A2A2A] mb-1" numberOfLines={1}>
-                    {card.name}
-                  </Text>
-                  <Text className="text-sm font-semibold text-[#4F46E5] mb-2">{formatPrice(card.price)}</Text>
+                  <View className="p-4">
+                    <Text 
+                      style={{ fontFamily: 'PlayfairDisplay-SemiBold' }} 
+                      className="text-base font-bold text-ink mb-2" 
+                      numberOfLines={1}
+                    >
+                      {card.name}
+                    </Text>
 
-                  <Text className="text-stone-500 text-xs leading-4" numberOfLines={3}>
-                    {cardReasoning}
-                  </Text>
+                    {/* Reasoning tags */}
+                    <View className="flex-row flex-wrap gap-1.5 mb-3">
+                      {card?.stylist_reasoning && (
+                        <SwingTag text="style match" color="bg-brass" textColor="text-bone" notchBg="bg-white" rotation="-8deg" small={true} />
+                      )}
+                      {card?.budget_reasoning && (
+                        <SwingTag text="on budget" color="bg-sage" textColor="text-bone" notchBg="bg-white" rotation="-8deg" small={true} />
+                      )}
+                      {card?.comparator_reasoning && (
+                        <SwingTag text="value pick" color="bg-clay" textColor="text-bone" notchBg="bg-white" rotation="-8deg" small={true} />
+                      )}
+                    </View>
+
+                    <Text className="text-charcoal60 text-xs leading-5" numberOfLines={3}>
+                      {cardReasoning}
+                    </Text>
+                  </View>
                 </View>
               );
             })}
@@ -177,11 +218,11 @@ export default function StyleBoardScreen({ route, navigation }) {
         {/* Back navigation */}
         <View className="px-6 mt-4">
           <TouchableOpacity 
-            className="w-full border border-stone-300 py-4 rounded-2xl items-center bg-white"
+            className="w-full border border-[#B08D57] py-4 rounded-sm items-center bg-white"
             onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
             activeOpacity={0.7}
           >
-            <Text className="text-stone-700 font-semibold text-base">New Search</Text>
+            <Text className="text-brass font-semibold tracking-widest uppercase text-sm">New Search</Text>
           </TouchableOpacity>
         </View>
 

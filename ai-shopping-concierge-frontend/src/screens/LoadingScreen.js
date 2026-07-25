@@ -114,14 +114,14 @@ export default function LoadingScreen({ route, navigation }) {
 
     return (
       <View 
-        style={{ width, height, overflow: 'hidden', backgroundColor: '#E2E8F0' }}
+        style={{ width, height, overflow: 'hidden', backgroundColor: 'rgba(107, 101, 92, 0.12)' }}
         className={`${className || 'rounded-xl'}`}
       >
         <Animated.View
           style={{
             width: 100,
             height: '100%',
-            backgroundColor: 'rgba(255, 255, 255, 0.65)',
+            backgroundColor: 'rgba(246, 241, 231, 0.75)',
             position: 'absolute',
             transform: [
               { translateX },
@@ -134,16 +134,19 @@ export default function LoadingScreen({ route, navigation }) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom', 'left', 'right']}>
+    <SafeAreaView className="flex-1 bg-bone" edges={['top', 'bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         
         {/* Status Message Text Section */}
-        <View className="px-6 pt-8 pb-4 items-center min-h-[120px] justify-center mb-10">
+        <View className="px-6 pt-12 pb-4 items-center min-h-[140px] justify-center mb-10">
           <Animated.View style={{ opacity: textOpacity }} className="items-center w-full">
-            <Text className="text-xs uppercase tracking-widest text-indigo-400 font-bold mb-1.5">
+            <Text className="text-xs uppercase tracking-widest text-brass font-bold mb-2">
               {messages[msgIndex].label}
             </Text>
-            <Text className="text-base font-medium text-slate-700 text-center px-4 leading-5">
+            <Text 
+              style={{ fontFamily: 'PlayfairDisplay-Regular', fontStyle: 'italic' }} 
+              className="text-lg text-charcoal60 text-center px-4 leading-6"
+            >
               {messages[msgIndex].text}
             </Text>
           </Animated.View>
@@ -151,9 +154,9 @@ export default function LoadingScreen({ route, navigation }) {
 
         {/* Shimmering Skeleton Elements */}
         <View className="px-6">
-          <View style={{ backgroundColor: '#E2E8F0' }} className="w-16 h-3 rounded mb-3" />
+          <View style={{ backgroundColor: 'rgba(107, 101, 92, 0.12)' }} className="w-16 h-3 rounded mb-3" />
 
-          <View className="bg-white border border-stone-200 rounded-2xl p-5 mb-8">
+          <View className="bg-white border border-[#EADFC9] rounded-xl p-5 mb-8">
             <View className="flex-row justify-between items-start mb-4">
               <SkeletonBox width={96} height={96} className="rounded-xl" />
               <SkeletonBox width={70} height={24} className="rounded-full" />
@@ -162,13 +165,13 @@ export default function LoadingScreen({ route, navigation }) {
             <SkeletonBox width="80%" height={20} className="rounded mb-2" />
             <SkeletonBox width="35%" height={16} className="rounded mb-4" />
 
-            <View className="border-t border-stone-100 pt-4 gap-2">
+            <View className="border-t border-[#F6F1E7] pt-4 gap-2">
               <SkeletonBox width="100%" height={12} className="rounded" />
               <SkeletonBox width="90%" height={12} className="rounded" />
             </View>
           </View>
 
-          <View style={{ backgroundColor: '#E2E8F0' }} className="w-28 h-3 rounded mb-3" />
+          <View style={{ backgroundColor: 'rgba(107, 101, 92, 0.12)' }} className="w-28 h-3 rounded mb-3" />
         </View>
 
         <ScrollView 
@@ -178,7 +181,7 @@ export default function LoadingScreen({ route, navigation }) {
           className="flex-row mb-6"
         >
           {[1, 2, 3].map((_, index) => (
-            <View key={index} className="bg-white border border-stone-200 rounded-2xl p-4 mr-4 w-64">
+            <View key={index} className="bg-white border border-[#EADFC9] rounded-xl p-4 mr-4 w-64">
               <View className="flex-row justify-between items-start mb-3">
                 <SkeletonBox width={64} height={64} className="rounded-xl" />
                 <SkeletonBox width={65} height={20} className="rounded-full" />

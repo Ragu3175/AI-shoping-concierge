@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { getHistory, getHistoryDetail } from '../api/queryApi';
+import SwingTag from '../components/SwingTag';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.23:8000';
 
@@ -10,6 +11,13 @@ export default function HistoryScreen({ navigation }) {
   const [historyData, setHistoryData] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
   const [loadingCardId, setLoadingCardId] = useState(null);
+
+  // Header dynamic configuration
+  useEffect(() => {
+    navigation.setOptions({
+      title: 'History',
+    });
+  }, [navigation]);
 
   const fetchHistory = async () => {
     try {
@@ -90,21 +98,21 @@ export default function HistoryScreen({ navigation }) {
 
     return (
       <TouchableOpacity
-        className="bg-white border border-slate-200 rounded-2xl p-4 mb-3"
+        className="py-6 border-b border-[#E5DFC6]"
         onPress={() => handlePressCard(item)}
         activeOpacity={0.7}
         disabled={isLoadingCard}
       >
         {/* Query & Time */}
-        <View className="flex-row justify-between items-start mb-3">
-          <Text className="text-slate-800 font-semibold text-base flex-1 mr-4" numberOfLines={2}>
+        <View className="flex-row justify-between items-start">
+          <Text className="text-ink font-medium text-base flex-1 mr-4" numberOfLines={2}>
             {item.query_text}
           </Text>
           <View className="flex-row items-center">
             {isLoadingCard ? (
-              <ActivityIndicator size="small" color="#4f46e5" />
+              <ActivityIndicator size="small" color="#B08D57" />
             ) : (
-              <Text className="text-slate-400 text-xs mt-0.5">
+              <Text className="text-charcoal60 text-xs mt-0.5 font-medium">
                 {formatTimeLabel(item.created_at)}
               </Text>
             )}
@@ -112,32 +120,42 @@ export default function HistoryScreen({ navigation }) {
         </View>
 
         {/* Top Pick Preview Sub-row */}
-        <View className="flex-row items-center bg-slate-50 border border-slate-100 rounded-xl p-2.5">
+        <View className="flex-row items-center bg-white border border-[#EADFC9] rounded-xl p-3 mt-4">
           {topPickImage ? (
             <Image
               source={{ uri: topPickImage }}
-              className="w-10 h-10 rounded-lg bg-slate-200 mr-3"
+              style={{ width: 48, height: 48 }}
+              className="rounded-lg bg-bone mr-3"
               resizeMode="cover"
+              fadeDuration={0}
+              resizeMethod="resize"
             />
           ) : (
-            <View className="w-10 h-10 bg-slate-200 rounded-lg justify-center items-center mr-3">
-              <Text className="text-slate-400 text-[10px] font-bold">Image</Text>
+            <View className="w-12 h-12 bg-bone rounded-lg justify-center items-center mr-3 border border-[#EADFC9]">
+              <Text className="text-charcoal60 text-[9px] font-bold">Image</Text>
             </View>
           )}
 
           <View className="flex-1">
-            <Text className="text-slate-400 text-[10px] uppercase tracking-wider font-bold mb-0.5">
+            <Text className="text-brass text-[9px] uppercase tracking-widest font-bold mb-0.5">
               {item.top_pick?.badge || 'Top Pick'}
             </Text>
-            <Text className="text-slate-700 text-xs font-medium" numberOfLines={1}>
+            <Text className="text-ink text-sm font-semibold" numberOfLines={1}>
               {item.top_pick ? item.top_pick.name : 'No recommendations'}
             </Text>
           </View>
 
           {item.top_pick && (
-            <Text className="text-[#4f46e5] text-xs font-bold pl-2">
-              {formatPrice(item.top_pick.price)}
-            </Text>
+            <View className="pl-3 shadow-xs">
+              <SwingTag 
+                text={formatPrice(item.top_pick.price)} 
+                color="bg-brass" 
+                textColor="text-bone" 
+                notchBg="bg-white" 
+                rotation="-8deg" 
+                small={true} 
+              />
+            </View>
           )}
         </View>
       </TouchableOpacity>
@@ -145,10 +163,10 @@ export default function HistoryScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" edges={['bottom', 'left', 'right']}>
+    <SafeAreaView className="flex-1 bg-bone" edges={['bottom', 'left', 'right']}>
       {loadingList && historyData.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4f46e5" />
+        <View className="flex-1 items-center justify-center bg-bone">
+          <ActivityIndicator size="large" color="#B08D57" />
         </View>
       ) : (
         <FlatList
@@ -157,13 +175,13 @@ export default function HistoryScreen({ navigation }) {
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40 }}
           ListHeaderComponent={
-            <Text className="text-2xl font-bold text-slate-800 mb-6 tracking-tight">
+            <Text style={{ fontFamily: 'PlayfairDisplay-SemiBold' }} className="text-3xl font-bold text-ink mb-6 tracking-tight">
               Your past searches
             </Text>
           }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
-              <Text className="text-slate-400 text-sm text-center">
+              <Text className="text-charcoal60 text-sm text-center">
                 No searches yet — try asking for something on the Home tab.
               </Text>
             </View>

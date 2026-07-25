@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
 import { getProfile, updateProfile, uploadProfilePicture } from '../api/profileApi';
+import SwingTag from '../components/SwingTag';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.23:8000';
 
@@ -22,6 +23,46 @@ export default function StyleProfileScreen({ route, navigation }) {
   const [errorMsg, setErrorMsg] = useState('');
 
   const toastOpacity = useRef(new Animated.Value(0)).current;
+
+  // Header dynamic configuration
+  useEffect(() => {
+    navigation.setOptions({
+      title: isOnboarding ? 'Style Profile' : 'Profile',
+    });
+  }, [navigation, isOnboarding]);
+
+  // Focus and Border Animations for Budget Inputs
+  const [minBudgetFocused, setMinBudgetFocused] = useState(false);
+  const minBudgetBorderAnim = useRef(new Animated.Value(0)).current;
+
+  const [maxBudgetFocused, setMaxBudgetFocused] = useState(false);
+  const maxBudgetBorderAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(minBudgetBorderAnim, {
+      toValue: minBudgetFocused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [minBudgetFocused]);
+
+  useEffect(() => {
+    Animated.timing(maxBudgetBorderAnim, {
+      toValue: maxBudgetFocused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [maxBudgetFocused]);
+
+  const minBudgetBorderColor = minBudgetBorderAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['rgba(107, 101, 92, 0.2)', '#B08D57'],
+  });
+
+  const maxBudgetBorderColor = maxBudgetBorderAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['rgba(107, 101, 92, 0.2)', '#B08D57'],
+  });
 
   const styleTags = [
     "Minimal", 
@@ -149,11 +190,11 @@ export default function StyleProfileScreen({ route, navigation }) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FAF9F6]" edges={['bottom', 'left', 'right']}>
+    <SafeAreaView className="flex-1 bg-bone" edges={['bottom', 'left', 'right']}>
       {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#4F46E5" />
-          <Text className="text-stone-500 mt-2">Loading preferences...</Text>
+        <View className="flex-1 justify-center items-center bg-bone">
+          <ActivityIndicator size="large" color="#B08D57" />
+          <Text className="text-charcoal60 mt-2 font-medium">Loading preferences...</Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -161,127 +202,134 @@ export default function StyleProfileScreen({ route, navigation }) {
             <View>
               {/* Account Details Panel (Visible only when viewed inside persistent Profile Tab) */}
               {!isOnboarding && (
-                <View className="bg-white border border-stone-200 rounded-2xl p-5 mb-8">
-                  <Text className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-3">
+                <View className="bg-white border border-[#EADFC9] rounded-xl p-5 mb-8">
+                  <Text className="text-charcoal60 text-xs font-bold uppercase tracking-widest mb-4">
                     Account Details
                   </Text>
                   <View className="flex-row items-center gap-4 mb-4">
                     <TouchableOpacity onPress={handlePickImage} activeOpacity={0.7} className="relative">
-                      {user?.profile_picture_url ? (
-                        <Image 
-                          source={{ uri: getProfilePictureUrl(user.profile_picture_url) }} 
-                          className="w-16 h-16 rounded-full bg-stone-100 border border-stone-200" 
-                        />
-                      ) : (
-                        <View className="w-16 h-16 rounded-full bg-[#4F46E5] justify-center items-center">
-                          <Text className="text-white text-xl font-bold">
-                            {(user?.name || 'U').substring(0, 1).toUpperCase()}
-                          </Text>
-                        </View>
-                      )}
-                      <View className="absolute bottom-0 right-0 bg-white border border-stone-200 rounded-full p-1 shadow-sm">
-                        <Text className="text-[10px]">📸</Text>
+                      <View className="w-16 h-16 rounded-full border border-brass p-0.5 justify-center items-center">
+                        {user?.profile_picture_url ? (
+                          <Image 
+                            source={{ uri: getProfilePictureUrl(user.profile_picture_url) }} 
+                            className="w-full h-full rounded-full bg-bone" 
+                          />
+                        ) : (
+                          <View className="w-full h-full rounded-full bg-bone justify-center items-center">
+                            <Text className="text-charcoal60 text-[9px] font-bold tracking-wider uppercase text-center">
+                              No Photo
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <View className="absolute bottom-0 right-0 bg-brass rounded-full p-1 shadow-sm">
+                        <Text className="text-[8px] text-bone">📸</Text>
                       </View>
                     </TouchableOpacity>
                     
                     <View className="flex-1">
-                      <Text className="text-lg font-bold text-[#2A2A2A]">{user?.name || 'User'}</Text>
-                      <Text className="text-stone-500 text-sm" numberOfLines={1}>{user?.email || 'email@example.com'}</Text>
+                      <Text className="text-lg font-bold text-ink">{user?.name || 'User'}</Text>
+                      <Text className="text-charcoal60 text-sm" numberOfLines={1}>{user?.email || 'email@example.com'}</Text>
                     </View>
                   </View>
-                  <TouchableOpacity onPress={handleLogout} activeOpacity={0.7} className="self-start">
-                    <Text className="text-red-500 font-semibold text-sm">Log out</Text>
+                  <TouchableOpacity onPress={handleLogout} activeOpacity={0.7} className="self-start mt-2">
+                    <Text className="text-clay font-semibold text-sm">Log out</Text>
                   </TouchableOpacity>
                 </View>
               )}
 
-              <Text className="text-3xl font-bold text-[#2A2A2A] mb-2 tracking-tight">
+              <Text style={{ fontFamily: 'PlayfairDisplay-SemiBold' }} className="text-3xl text-ink mb-2 tracking-tight">
                 {isOnboarding ? "What's your style?" : "Style Preferences"}
               </Text>
-              <Text className="text-stone-500 text-base mb-8">
+              <Text className="text-charcoal60 text-sm mb-8">
                 Pick a few that feel like you — you can change this anytime.
               </Text>
 
               {/* Error Banner */}
               {errorMsg ? (
-                <View className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-                  <Text className="text-red-600 text-sm font-medium">{errorMsg}</Text>
+                <View className="bg-clay/10 border border-clay/35 rounded-xl p-4 mb-6">
+                  <Text className="text-clay text-sm font-medium">{errorMsg}</Text>
                 </View>
               ) : null}
 
               {/* Style Tags Flex Grid */}
-              <View className="flex-row flex-wrap gap-3 mb-10">
+              <View className="flex-row flex-wrap gap-x-2.5 gap-y-3.5 mb-10">
                 {styleTags.map((tag, index) => {
                   const isSelected = selectedTags.includes(tag);
                   return (
-                    <TouchableOpacity
+                    <SwingTag
                       key={index}
-                      className={`px-5 py-3 rounded-full border ${
-                        isSelected 
-                          ? 'bg-[#4F46E5] border-[#4F46E5]' 
-                          : 'bg-white border-stone-200'
-                      }`}
+                      text={tag}
+                      color={isSelected ? 'bg-brass' : 'bg-transparent'}
+                      textColor={isSelected ? 'text-bone' : 'text-ink'}
+                      notchBg="bg-bone"
+                      border={!isSelected}
                       onPress={() => handleToggleTag(tag)}
-                      activeOpacity={0.7}
-                      disabled={saving}
-                    >
-                      <Text className={`text-sm font-semibold ${
-                        isSelected ? 'text-white' : 'text-stone-600'
-                      }`}>
-                        {tag}
-                      </Text>
-                    </TouchableOpacity>
+                      rotation={isSelected ? '-8deg' : '2deg'}
+                    />
                   );
                 })}
               </View>
 
               {/* Budget Range Section */}
-              <Text className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-4">
+              <Text className="text-charcoal60 text-xs font-bold uppercase tracking-widest mb-4">
                 Usual budget range
               </Text>
               
-              <View className="flex-row gap-4 mb-10">
+              <View className="flex-row gap-6 mb-10">
                 <View className="flex-1">
-                  <Text className="text-stone-500 text-xs font-medium mb-2">Min Budget (₹)</Text>
-                  <TextInput
-                    className="bg-white border border-stone-200 rounded-xl p-4 text-[#2A2A2A] text-base"
-                    placeholder="₹1,000"
-                    placeholderTextColor="#8C8C8C"
-                    keyboardType="numeric"
-                    value={minBudget}
-                    onChangeText={setMinBudget}
-                    editable={!saving}
-                  />
+                  <Text className="text-charcoal60 text-xs font-medium mb-1">Min Budget (₹)</Text>
+                  <View className="relative pb-1">
+                    <TextInput
+                      onFocus={() => setMinBudgetFocused(true)}
+                      onBlur={() => setMinBudgetFocused(false)}
+                      className="py-2 text-ink text-3xl font-semibold"
+                      style={{ fontFamily: 'PlayfairDisplay-Regular' }}
+                      placeholder="1,000"
+                      placeholderTextColor="#6B655C"
+                      keyboardType="numeric"
+                      value={minBudget}
+                      onChangeText={setMinBudget}
+                      editable={!saving}
+                    />
+                    <Animated.View style={{ height: 1.5, backgroundColor: minBudgetBorderColor, position: 'absolute', bottom: 0, left: 0, right: 0 }} />
+                  </View>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-stone-500 text-xs font-medium mb-2">Max Budget (₹)</Text>
-                  <TextInput
-                    className="bg-white border border-stone-200 rounded-xl p-4 text-[#2A2A2A] text-base"
-                    placeholder="₹10,000"
-                    placeholderTextColor="#8C8C8C"
-                    keyboardType="numeric"
-                    value={maxBudget}
-                    onChangeText={setMaxBudget}
-                    editable={!saving}
-                  />
+                  <Text className="text-charcoal60 text-xs font-medium mb-1">Max Budget (₹)</Text>
+                  <View className="relative pb-1">
+                    <TextInput
+                      onFocus={() => setMaxBudgetFocused(true)}
+                      onBlur={() => setMaxBudgetFocused(false)}
+                      className="py-2 text-ink text-3xl font-semibold"
+                      style={{ fontFamily: 'PlayfairDisplay-Regular' }}
+                      placeholder="10,000"
+                      placeholderTextColor="#6B655C"
+                      keyboardType="numeric"
+                      value={maxBudget}
+                      onChangeText={setMaxBudget}
+                      editable={!saving}
+                    />
+                    <Animated.View style={{ height: 1.5, backgroundColor: maxBudgetBorderColor, position: 'absolute', bottom: 0, left: 0, right: 0 }} />
+                  </View>
                 </View>
               </View>
             </View>
 
             {/* Contextual Action Button */}
             <TouchableOpacity
-              className={`w-full py-4 rounded-2xl items-center mt-6 ${saving ? 'bg-slate-400' : 'bg-[#4F46E5]'}`}
+              className={`w-full py-4 rounded-sm items-center mt-6 shadow-none ${saving ? 'bg-brass/60' : 'bg-brass'}`}
               onPress={handleSave}
               activeOpacity={0.85}
               disabled={saving}
             >
               {saving ? (
                 <View className="flex-row items-center gap-2">
-                  <ActivityIndicator size="small" color="#ffffff" />
-                  <Text className="text-white text-base font-semibold tracking-wide">Saving...</Text>
+                  <ActivityIndicator size="small" color="#F6F1E7" />
+                  <Text className="text-bone text-base font-semibold tracking-widest uppercase">Saving...</Text>
                 </View>
               ) : (
-                <Text className="text-white text-base font-semibold tracking-wide">
+                <Text className="text-bone text-base font-semibold tracking-widest uppercase">
                   {isOnboarding ? "Save and continue" : "Save changes"}
                 </Text>
               )}
@@ -295,19 +343,19 @@ export default function StyleProfileScreen({ route, navigation }) {
         style={{ 
           opacity: toastOpacity,
           position: 'absolute',
-          bottom: 120,
+          bottom: 40,
           alignSelf: 'center',
-          backgroundColor: '#1e293b',
+          backgroundColor: '#1E1B18',
           paddingHorizontal: 24,
           paddingVertical: 12,
-          borderRadius: 9999,
+          borderRadius: 4,
           elevation: 2,
           shadowOpacity: 0.15,
           shadowRadius: 5,
         }}
         pointerEvents="none"
       >
-        <Text className="text-white text-sm font-semibold">Profile updated</Text>
+        <Text className="text-bone text-sm font-semibold tracking-wider uppercase">Profile updated</Text>
       </Animated.View>
     </SafeAreaView>
   );
