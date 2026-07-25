@@ -27,6 +27,36 @@ def matches_color(candidate: dict, target_color: str) -> bool:
     return bool(re.search(pattern, combined_text))
 
 
+def candidate_text(candidate: dict) -> str:
+    style_tags = candidate.get("style_tags") or []
+    if isinstance(style_tags, list):
+        tags_str = " ".join(style_tags)
+    else:
+        tags_str = str(style_tags)
+
+    return (
+        f"{candidate.get('name', '')} {candidate.get('description', '')} "
+        f"{candidate.get('category', '')} {candidate.get('subcategory', '')} {tags_str}"
+    ).lower()
+
+
+def matches_occasion(candidate: dict, occasion: str) -> bool:
+    if not occasion:
+        return True
+
+    occ = occasion.lower().strip()
+    text = candidate_text(candidate)
+
+    if occ in {"office", "work", "formal", "business"}:
+        formal_keywords = ["formal", "office", "work", "business", "shirt", "trouser", "blazer", "cufflink", "tie"]
+        casual_only_keywords = ["tshirt", "t-shirt", "graphic", "lounge", "sports", "innerwear", "briefs", "shapewear"]
+        if any(bad in text for bad in casual_only_keywords):
+            return False
+        return any(good in text for good in formal_keywords)
+
+    return occ in text
+
+
 def calculate_style_score(candidate: dict, intent: dict) -> float:
     """Computes a numeric style score (0-100) combining vector similarity (70%), tag overlap (30%), and color boost."""
     intent_tags = intent.get("style_tags") or []
@@ -57,6 +87,16 @@ def calculate_style_score(candidate: dict, intent: dict) -> float:
     target_color = (intent.get("color") or "").strip().lower()
     if target_color and matches_color(candidate, target_color):
         final_score += 20.0
+    elif target_color:
+        final_score -= 25.0
+
+    # Office/work queries should prefer formal products over casual similarity accidents.
+    occasion = (intent.get("occasion") or "").strip().lower()
+    if occasion in {"office", "work", "formal", "business"}:
+        if matches_occasion(candidate, occasion):
+            final_score += 25.0
+        else:
+            final_score -= 30.0
 
     return round(min(100.0, max(0.0, final_score)), 2)
 

@@ -58,38 +58,78 @@ def matches_color(item: dict, target_color: str) -> bool:
     return bool(re.search(pattern, combined_text))
 
 
+def get_text_blob(item: dict) -> str:
+    """Builds normalized searchable text for rule-based matching."""
+    style_tags = item.get("style_tags") or []
+    if isinstance(style_tags, list):
+        tags_str = " ".join(style_tags)
+    else:
+        tags_str = str(style_tags)
+
+    parts = [
+        item.get("category") or "",
+        item.get("subcategory") or "",
+        item.get("name") or "",
+        item.get("description") or "",
+        tags_str,
+    ]
+    return " ".join(parts).lower().strip()
+
+
+def matches_occasion(item: dict, occasion: str) -> bool:
+    """Checks whether a candidate matches strong occasion intent such as office/formal."""
+    if not occasion:
+        return True
+
+    occ = occasion.lower().strip()
+    text = get_text_blob(item)
+
+    if occ in {"office", "work", "formal", "business"}:
+        formal_keywords = ["formal", "office", "work", "business", "shirt", "trouser", "blazer", "cufflink", "tie"]
+        casual_only_keywords = ["tshirt", "t-shirt", "graphic", "lounge", "sports", "innerwear", "briefs", "shapewear"]
+        if any(bad in text for bad in casual_only_keywords):
+            return False
+        return any(good in text for good in formal_keywords)
+
+    return occ in text
+
+
 def matches_category(item: dict, target_category: str) -> bool:
     """Checks if a product candidate matches the target category from intent."""
     if not target_category:
         return True
 
     target = target_category.lower().strip()
-    item_cat = (item.get("category") or "").lower().strip()
-    item_name = (item.get("name") or "").lower().strip()
-    item_desc = (item.get("description") or "").lower().strip()
-    combined_text = f"{item_cat} {item_name} {item_desc}"
+    item_subcat = (item.get("subcategory") or "").lower().strip()
+    combined_text = get_text_blob(item)
 
     if target == "footwear":
         keywords = ["footwear", "shoe", "shoes", "heels", "sandals", "sneakers", "boots", "flats", "slippers"]
-        return any(kw in combined_text for kw in keywords)
+        return item_subcat == "shoes" or any(kw in combined_text for kw in keywords)
     elif target == "topwear":
         top_keywords = ["top", "shirt", "t-shirt", "tshirt", "jacket", "sweater", "polo", "kurta", "blazer", "vest", "topwear"]
-        bottom_keywords = ["pant", "pants", "trouser", "trousers", "jeans", "shorts", "skirt", "track pant"]
-        acc_keywords = ["wallet", "belt", "shoe", "shoes", "sandals", "heels", "deo", "perfume", "compact", "makeup", "accessories", "personal care"]
+        bottom_keywords = ["pant", "pants", "trouser", "trousers", "jeans", "shorts", "skirt", "track pant", "leggings", "capri", "churidar"]
+        acc_keywords = ["wallet", "belt", "shoe", "shoes", "sandals", "heels", "deo", "perfume", "compact", "makeup", "accessories", "personal care", "innerwear", "shapewear"]
 
         if any(ak in combined_text for ak in acc_keywords):
             return False
-        if any(bk in item_name for bk in bottom_keywords):
+        if any(bk in combined_text for bk in bottom_keywords):
             return False
-        return any(tk in combined_text for tk in top_keywords) or item_cat == "apparel"
+        return item_subcat == "topwear" or any(tk in combined_text for tk in top_keywords)
     elif target == "bottomwear":
-        bottom_keywords = ["pant", "pants", "trouser", "trousers", "jeans", "shorts", "skirt", "track pant", "bottomwear"]
+        bottom_keywords = [
+            "pant", "pants", "trouser", "trousers", "jeans", "shorts", "skirt",
+            "track pant", "bottomwear", "leggings", "capri", "capris", "churidar",
+            "lounge pants", "loungewear"
+        ]
+        if item_subcat in {"bottomwear", "loungewear and nightwear"}:
+            return True
         return any(bk in combined_text for bk in bottom_keywords)
     elif target == "accessories":
         acc_keywords = ["accessories", "wallet", "belt", "bag", "backpack", "watch", "tie", "sunglasses", "jewellery"]
         return any(ak in combined_text for ak in acc_keywords)
 
-    return target in combined_text or item_cat == target
+    return target in combined_text
 
 
 def filter_candidates(
@@ -105,6 +145,7 @@ def filter_candidates(
     gender_intent = str(intent.get("gender") or "").strip().lower()
     cat_intent = str(intent.get("category") or "").strip().lower()
     color_intent = str(intent.get("color") or "").strip().lower()
+    occasion_intent = str(intent.get("occasion") or "").strip().lower()
     q_lower = (query_text or "").lower()
 
     kids_genders = {"kids", "boys", "girls", "children"}
@@ -140,6 +181,10 @@ def filter_candidates(
         if category and not matches_category(item, category):
             continue
 
+        # Strong occasion filtering for office/formal intent
+        if occasion_intent in {"office", "work", "formal", "business"} and not matches_occasion(item, occasion_intent):
+            continue
+
         # Budget filtering
         price = item.get("price")
         if price is None:
@@ -159,15 +204,13 @@ def filter_candidates(
 
         filtered.append(item)
 
-    # Color filtering / boost:
-    # If 3+ candidates match requested color, restrict results to color matches only.
-    # Otherwise, prioritize color matches at the top of the candidate list as fallback.
+    # Color filtering:
+    # If any candidates match a requested color, restrict results to exact color matches.
+    # If none match, broader fallback below may search more of the catalog.
     if color_intent:
         color_matches = [item for item in filtered if matches_color(item, color_intent)]
-        if len(color_matches) >= 3:
+        if color_matches:
             filtered = color_matches
-        elif len(color_matches) > 0:
-            filtered = sorted(filtered, key=lambda item: 0 if matches_color(item, color_intent) else 1)
 
     return filtered
 
@@ -185,6 +228,15 @@ def retrieve_candidates(query_text: str, top_k: int = 10) -> dict:
     style_tags = intent.get("style_tags") or []
     category = intent.get("category") or ""
     color_intent = intent.get("color") or ""
+    occasion = (intent.get("occasion") or "").lower().strip()
+
+    # Normalize common shopping language to catalog vocabulary.
+    if occasion in {"office", "work", "business"}:
+        if isinstance(style_tags, list):
+            normalized_tags = {str(tag).strip().lower() for tag in style_tags if str(tag).strip()}
+            normalized_tags.add("formal")
+            intent["style_tags"] = list(normalized_tags)
+            style_tags = intent["style_tags"]
 
     # Infer color if missing from groq intent
     if not color_intent:
@@ -247,7 +299,10 @@ def retrieve_candidates(query_text: str, top_k: int = 10) -> dict:
     broadened = False
 
     # 5. Conditional logic: broaden search if fewer than 3 candidates match
-    if len(filtered_candidates) < 3:
+    has_strong_color_miss = bool(color_intent) and not any(matches_color(item, color_intent) for item in filtered_candidates)
+    has_strong_office_miss = occasion in {"office", "work", "business", "formal"} and len(filtered_candidates) < top_k
+
+    if len(filtered_candidates) < 3 or has_strong_color_miss or has_strong_office_miss:
         broadened = True
         print(f"[Retriever] Broadening triggered: Only {len(filtered_candidates)} candidate(s) matched initial top-{initial_pool_size} pool for query '{query_text}'. Querying full catalog (top_k=500).")
         broader_candidates = store.query(search_string, top_k=500)
