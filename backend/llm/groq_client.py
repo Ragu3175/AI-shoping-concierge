@@ -74,16 +74,18 @@ Output:
 
 
 def parse_query_intent(query_text: str) -> dict:
-    """Extract structured shopping intent from raw query text using Groq llama-3.1-8b-instant."""
+    """Extract structured shopping intent from raw query text using Groq."""
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         print("Warning: GROQ_API_KEY is missing from environment.")
         return DEFAULT_INTENT.copy()
 
+    model_name = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+
     try:
         client = Groq(api_key=api_key)
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model=model_name,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": query_text}
